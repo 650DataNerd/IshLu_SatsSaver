@@ -1,0 +1,17 @@
+aiofiles==24.1.0
+anthropic==0.96.0
+bcrypt==4.2.1
+cryptography==41.0.7
+fastapi==0.136.0
+httpx==0.28.1
+passlib==1.7.4
+pydantic==2.13.3
+pydantic-settings==2.14.0
+pydantic_core==2.46.3
+python-dotenv==1.0.1
+python-multipart==0.0.20
+slowapi==0.1.10
+supabase==2.28.3
+supabase-auth==2.28.3
+supabase-functions==2.28.3
+uvicorn==0.44.0
