@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IshLu SatsSaver</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A1A0F;
+    --bg2: #111D14;
+    --bg3: #172318;
+    --card: #1A2B1C;
+    --card2: #1F3322;
+    --border: #2A3D2C;
+    --green: #2D9B57;
+    --green-light: #3DBD6A;
+    --green-dim: #1A6B3A;
+    --orange: #F7931A;
+    --orange-dim: #C4780E;
+    --text: #EFF7F1;
+    --text2: #8FB89A;
+    --text3: #4A7A58;
+    --gold: #FFD700;
+    --red: #FF5252;
+    --blue: #4A9EFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060E08;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* NAV */
+  .nav {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    gap: 6px;
+    padding: 16px 12px 8px;
+    position: sticky;
+    top: 0;
+    background: #060E08;
+    z-index: 100;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-btn.active {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #000;
+    font-weight: 600;
+  }
+
+  /* PHONE FRAME */
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+    box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 0 1px #1A2B1C;
+    margin: 8px 0 40px;
+  }
+
+  /* SCREENS */
+  .screen { display: none; width: 100%; min-height: 844px; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* STATUS BAR */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 28px 0;
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ===== ONBOARDING ===== */
+  .onboarding {
+    background: linear-gradient(180deg, #0D2410 0%, #0A1A0F 60%, #060E08 100%);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 32px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .onboarding::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(45,155,87,0.15) 0%, transparent 70%);
+    top: 60px; left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .tree-container {
+    width: 180px; height: 200px;
+    position: relative;
+    margin: 20px 0 32px;
+  }
+  .tree-svg { width: 100%; height: 100%; }
+  .onboarding h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .onboarding h1 span { color: var(--orange); }
+  .onboarding p {
+    color: var(--text2);
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+    width: 100%;
+  }
+  .stat-pill {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-pill .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green-light);
+  }
+  .stat-pill .lbl { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .btn-primary {
+    width: 100%;
+    padding: 18px;
+    background: var(--orange);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { background: #FFa830; transform: translateY(-1px); }
+  .btn-secondary {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--green); color: var(--text); }
+
+  /* ===== DASHBOARD ===== */
+  .dash-header {
+    background: linear-gradient(180deg, #0F2415 0%, var(--bg) 100%);
+    padding: 20px 24px 28px;
+  }
+  .dash-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-dim), var(--green));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 14px;
+  }
+  .greeting { font-size: 13px; color: var(--text2); }
+  .user-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .notif-btn {
+    width: 40px; height: 40px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px;
+  }
+  .balance-card {
+    background: linear-gradient(135deg, #1A3D24, #0F2415);
+    border: 1px solid var(--green-dim);
+    border-radius: 24px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .balance-card::after {
+    content: '₿';
+    position: absolute;
+    right: -10px; top: -20px;
+    font-size: 120px;
+    color: rgba(45,155,87,0.06);
+    font-family: 'Syne', sans-serif;
+  }
+  .balance-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .balance-kes {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .balance-kes span { font-size: 22px; color: var(--text2); }
+  .balance-sats {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--orange);
+    margin-bottom: 16px;
+  }
+  .balance-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(45,155,87,0.15);
+    border: 1px solid rgba(45,155,87,0.3);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--green-light);
+  }
+  .score-bar-section { padding: 20px 24px; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .view-all { font-size: 12px; color: var(--green-light); cursor: pointer; }
+  .trust-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+  }
+  .trust-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .trust-score-big {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .trust-tier {
+    font-size: 11px;
+    color: var(--gold);
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  .trust-desc { font-size: 13px; color: var(--text2); max-width: 160px; line-height: 1.5; }
+  .score-bars { display: flex; flex-direction: column; gap: 8px; }
+  .score-bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label { font-size: 11px; color: var(--text3); width: 90px; flex-shrink: 0; }
+  .bar-track {
+    flex: 1; height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-dim), var(--green-light));
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+  .bar-val { font-size: 10px; color: var(--text2); width: 28px; text-align: right; font-family: 'DM Mono', monospace; }
+  .actions-row { display: flex; gap: 12px; padding: 0 24px 20px; }
+  .action-btn {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { border-color: var(--green); background: var(--card2); }
+  .action-icon { font-size: 22px; }
+  .action-label { font-size: 11px; color: var(--text2); }
+  .recent-section { padding: 0 24px 100px; }
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .activity-icon.green { background: rgba(45,155,87,0.15); }
+  .activity-icon.orange { background: rgba(247,147,26,0.15); }
+  .activity-icon.blue { background: rgba(74,158,255,0.15); }
+  .activity-info { flex: 1; }
+  .activity-name { font-size: 14px; font-weight: 500; }
+  .activity-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .activity-amount { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .amount-positive { color: var(--green-light); }
+  .amount-negative { color: var(--red); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 80px;
+    background: rgba(10,26,15,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px 16px;
+  }
+  .bnav-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; padding: 8px 16px;
+    border-radius: 12px;
+    transition: all 0.2s;
+  }
+  .bnav-item.active { background: rgba(247,147,26,0.1); }
+  .bnav-icon { font-size: 20px; }
+  .bnav-label { font-size: 10px; color: var(--text3); }
+  .bnav-item.active .bnav-label { color: var(--orange); }
+
+  /* ===== SAVE SCREEN ===== */
+  .save-screen { padding: 20px 24px 100px; flex: 1; overflow-y: auto; }
+  .screen-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .screen-sub { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+  .amount-input-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .amount-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .amount-display {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .amount-display span { font-size: 28px; color: var(--text2); }
+  .amount-sats-equiv { font-size: 13px; color: var(--orange); font-family: 'DM Mono', monospace; margin-bottom: 20px; }
+  .quick-amounts { display: flex; gap: 8px; justify-content: center; }
+  .quick-chip {
+    padding: 8px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-chip:hover, .quick-chip.active {
+    background: rgba(247,147,26,0.15);
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+  .pay-methods { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .pay-method {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pay-method.selected { border-color: var(--orange); background: rgba(247,147,26,0.05); }
+  .pay-method-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .mpesa-icon { background: rgba(0,153,64,0.15); }
+  .lightning-icon { background: rgba(247,147,26,0.15); }
+  .pay-method-info { flex: 1; }
+  .pay-method-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .pay-method-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .pay-method-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .badge-recommended { background: rgba(45,155,87,0.2); color: var(--green-light); }
+  .badge-advanced { background: rgba(247,147,26,0.15); color: var(--orange); }
+  .goal-selector { margin-bottom: 20px; }
+  .goal-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .goal-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .goal-chip {
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .goal-chip.active {
+    background: rgba(45,155,87,0.15);
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+
+  /* ===== LOAN SCREEN ===== */
+  .loan-screen { padding: 20px 24px 100px; flex: 1; overflow-y: auto; }
+  .liquidity-hero {
+    background: linear-gradient(135deg, #1A3D24, #2D1A00);
+    border: 1px solid var(--green-dim);
+    border-radius: 24px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .liquidity-hero::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(247,147,26,0.1) 0%, transparent 70%);
+    right: -40px; top: -40px;
+  }
+  .liquidity-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .liquidity-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .liquidity-amount span { color: var(--orange); }
+  .liquidity-sub { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .score-badge-row { display: flex; gap: 10px; align-items: center; }
+  .score-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.2);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--gold);
+  }
+  .commitments-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .commitment-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 20px;
+  }
+  .commitment-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .commitment-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  .commitment-status {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .status-active { background: rgba(74,158,255,0.15); color: var(--blue); }
+  .status-pending { background: rgba(255,82,82,0.15); color: var(--red); }
+  .commitment-amount { font-family: 'DM Mono', monospace; font-size: 16px; color: var(--orange); margin-bottom: 8px; }
+  .commitment-progress { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+  .commitment-fill { height: 100%; background: var(--orange); border-radius: 2px; }
+  .commitment-meta { font-size: 11px; color: var(--text3); }
+  .emergency-loan-btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ===== LEARN SCREEN ===== */
+  .learn-screen { padding: 20px 24px 100px; flex: 1; overflow-y: auto; }
+  .learn-hero {
+    background: linear-gradient(135deg, #1A2B1C, #0F1A10);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .learn-hero-icon { font-size: 48px; }
+  .learn-hero-text h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .learn-hero-text p { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .learn-grid { display: flex; flex-direction: column; gap: 12px; }
+  .learn-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .learn-card:hover { border-color: var(--green); }
+  .learn-card-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .learn-card-info { flex: 1; }
+  .learn-card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .learn-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .learn-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-top: 8px;
+    display: inline-block;
+    font-weight: 600;
+  }
+  .tag-beginner { background: rgba(45,155,87,0.2); color: var(--green-light); }
+  .tag-intermediate { background: rgba(74,158,255,0.15); color: var(--blue); }
+  .tag-advanced { background: rgba(247,147,26,0.15); color: var(--orange); }
+  .featured-article {
+    background: linear-gradient(135deg, #1F1200, #2D1A00);
+    border: 1px solid rgba(247,147,26,0.2);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .featured-tag { font-size: 10px; color: var(--orange); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .featured-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .featured-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+  .read-btn {
+    padding: 10px 20px;
+    background: var(--orange);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* ===== ACTIVITY ===== */
+  .activity-screen { padding: 20px 24px 100px; flex: 1; overflow-y: auto; }
+  .filter-row { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-chip.active {
+    background: rgba(45,155,87,0.15);
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+  .month-group { margin-bottom: 24px; }
+  .month-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .journal-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .journal-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .journal-item:last-child { border-bottom: none; }
+  .highlight-card {
+    background: linear-gradient(135deg, #0F2415, #172318);
+    border: 1px solid var(--green-dim);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .highlight-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+  .highlight-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
+  .highlight-val.green { color: var(--green-light); }
+  .highlight-val.orange { color: var(--orange); }
+
+  /* ===== PROFILE ===== */
+  .profile-screen { padding: 0 0 100px; flex: 1; overflow-y: auto; }
+  .profile-hero {
+    background: linear-gradient(180deg, #0F2415 0%, var(--bg) 100%);
+    padding: 20px 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0;
+  }
+  .profile-avatar {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green-dim), var(--green));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 24px;
+    border: 3px solid var(--green-light);
+  }
+  .profile-info h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+  .profile-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .premium-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    color: var(--gold);
+    margin-top: 8px;
+    width: fit-content;
+    font-weight: 600;
+  }
+  .alert-card {
+    margin: 16px 24px;
+    background: rgba(255,82,82,0.08);
+    border: 1px solid rgba(255,82,82,0.2);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert-title { font-size: 14px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+  .alert-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .alert-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .settings-section { padding: 0 24px; margin-bottom: 24px; }
+  .settings-title { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .settings-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row-left { display: flex; align-items: center; gap: 12px; }
+  .settings-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .settings-label { font-size: 14px; }
+  .settings-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--green);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; right: 3px;
+    transition: all 0.2s;
+  }
+  .toggle.off { background: var(--bg3); }
+  .toggle.off::after { right: auto; left: 3px; }
+  .chevron { color: var(--text3); font-size: 14px; }
+
+  /* OFFLINE BANNER */
+  .offline-banner {
+    background: rgba(255,82,82,0.1);
+    border-bottom: 1px solid rgba(255,82,82,0.2);
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #FF8A80;
+  }
+
+  /* SCROLLABLE CONTENT */
+  .scrollable { overflow-y: auto; flex: 1; }
+  .scrollable::-webkit-scrollbar { display: none; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+  .screen.active > * { animation: fadeUp 0.4s ease forwards; }
+  .tree-svg { animation: sway 4s ease-in-out infinite; transform-origin: bottom center; }
+
+  /* LITE MODE TOGGLE */
+  .lite-toggle {
+    position: fixed;
+    bottom: 100px;
+    right: calc(50% - 220px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .lite-toggle:hover { border-color: var(--orange); }
+  .lite-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-light); }
+  .lite-dot.slow { background: var(--orange); animation: pulse 1.5s infinite; }
+
+  body.lite-mode .balance-card::after { display: none; }
+  body.lite-mode .tree-svg { animation: none; }
+  body.lite-mode .onboarding::before { display: none; }
+</style>
+</head>
+<body>
+
+<!-- SCREEN NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showScreen('onboarding', this)">Onboarding</button>
+  <button class="nav-btn" onclick="showScreen('dashboard', this)">Dashboard</button>
+  <button class="nav-btn" onclick="showScreen('save', this)">Save</button>
+  <button class="nav-btn" onclick="showScreen('loan', this)">Loan</button>
+  <button class="nav-btn" onclick="showScreen('learn', this)">Learn</button>
+  <button class="nav-btn" onclick="showScreen('activity', this)">Activity</button>
+  <button class="nav-btn" onclick="showScreen('profile', this)">Profile</button>
+</div>
+
+<!-- LITE MODE TOGGLE -->
+<div class="lite-toggle" onclick="toggleLite()" id="liteBtn">
+  <div class="lite-dot" id="liteDot"></div>
+  <span id="liteLabel">Full Mode</span>
+</div>
+
+<!-- PHONE -->
+<div class="phone">
+
+  <!-- ===== ONBOARDING ===== -->
+  <div class="screen active" id="screen-onboarding">
+    <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+    <div class="onboarding">
+      <div class="tree-container">
+        <svg class="tree-svg" viewBox="0 0 180 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ground -->
+          <ellipse cx="90" cy="192" rx="45" ry="8" fill="#0A2E14" opacity="0.6"/>
+          <!-- Trunk -->
+          <path d="M84 188 Q88 160 92 140" stroke="#5C3A1E" stroke-width="10" stroke-linecap="round" fill="none"/>
+          <!-- Roots -->
+          <path d="M84 188 Q70 195 60 192" stroke="#4A2F14" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M92 188 Q106 195 116 192" stroke="#4A2F14" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <!-- Canopy layers -->
+          <circle cx="90" cy="120" r="48" fill="#1A6B3A" opacity="0.9"/>
+          <circle cx="65" cy="132" r="34" fill="#1A6B3A" opacity="0.85"/>
+          <circle cx="115" cy="132" r="34" fill="#1A6B3A" opacity="0.85"/>
+          <circle cx="90" cy="100" r="38" fill="#2D9B57" opacity="0.95"/>
+          <circle cx="72" cy="112" r="26" fill="#2D9B57" opacity="0.9"/>
+          <circle cx="108" cy="112" r="26" fill="#2D9B57" opacity="0.9"/>
+          <circle cx="90" cy="85" r="28" fill="#3DBD6A" opacity="0.9"/>
+          <!-- Bitcoin fruits -->
+          <circle cx="78" cy="95" r="8" fill="#F7931A"/>
+          <text x="74" y="99" font-size="9" fill="#7A4800" font-weight="bold">₿</text>
+          <circle cx="102" cy="105" r="8" fill="#F7931A"/>
+          <text x="98" y="109" font-size="9" fill="#7A4800" font-weight="bold">₿</text>
+          <circle cx="90" cy="78" r="7" fill="#F7931A"/>
+          <text x="86.5" y="82" font-size="8" fill="#7A4800" font-weight="bold">₿</text>
+          <circle cx="68" cy="118" r="6" fill="#FFB830"/>
+          <circle cx="112" cy="120" r="6" fill="#FFB830"/>
+          <!-- Glow -->
+          <circle cx="90" cy="110" r="70" fill="#F7931A" opacity="0.04"/>
+        </svg>
+      </div>
+      <h1>Grow Your <span>Bitcoin</span> Forest</h1>
+      <p>Save in sats, build your credit score, unlock emergency loans — all from your phone.</p>
+      <div class="stats-row">
+        <div class="stat-pill">
+          <div class="val">400M+</div>
+          <div class="lbl">Unbanked Africans</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val">0%</div>
+          <div class="lbl">Credit Access</div>
+        </div>
+        <div class="stat-pill">
+          <div class="val">IshLu</div>
+          <div class="lbl">Changes This</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])">Get Started →</button>
+      <button class="btn-secondary">Already saving? Sign in</button>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="screen" id="screen-dashboard">
+    <div class="scrollable">
+      <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+      <div class="dash-header">
+        <div class="dash-top">
+          <div class="user-info">
+            <div class="avatar">A</div>
+            <div>
+              <div class="greeting">Good morning 🌱</div>
+              <div class="user-name">Aisha Kamau</div>
+            </div>
+          </div>
+          <div class="notif-btn">🔔</div>
+        </div>
+        <div class="balance-card">
+          <div class="balance-label">Total Saved</div>
+          <div class="balance-kes"><span>KES</span> 12,450</div>
+          <div class="balance-sats">≈ 93,375 sats</div>
+          <div class="balance-change">↑ +4.2% this week</div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <div class="action-btn" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])">
+          <div class="action-icon">📱</div>
+          <div class="action-label">M-Pesa</div>
+        </div>
+        <div class="action-btn" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])">
+          <div class="action-icon">⚡</div>
+          <div class="action-label">Lightning</div>
+        </div>
+        <div class="action-btn" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])">
+          <div class="action-icon">💰</div>
+          <div class="action-label">Borrow</div>
+        </div>
+        <div class="action-btn" onclick="showScreen('learn', document.querySelectorAll('.nav-btn')[4])">
+          <div class="action-icon">📚</div>
+          <div class="action-label">Learn</div>
+        </div>
+      </div>
+
+      <div class="score-bar-section">
+        <div class="section-header">
+          <div class="section-title">Trust Score</div>
+          <div class="view-all" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])">Details →</div>
+        </div>
+        <div class="trust-card">
+          <div class="trust-row">
+            <div>
+              <div class="trust-score-big">842</div>
+              <div class="trust-tier">⭐ Platinum</div>
+            </div>
+            <div class="trust-desc">Your consistent saving habits are flourishing. Keep growing.</div>
+          </div>
+          <div class="score-bars">
+            <div class="score-bar-row">
+              <div class="bar-label">Consistency</div>
+              <div class="bar-track"><div class="bar-fill" style="width:90%"></div></div>
+              <div class="bar-val">32/35</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="bar-label">Goals Hit</div>
+              <div class="bar-track"><div class="bar-fill" style="width:85%"></div></div>
+              <div class="bar-val">21/25</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="bar-label">Tenure</div>
+              <div class="bar-track"><div class="bar-fill" style="width:70%"></div></div>
+              <div class="bar-val">11/15</div>
+            </div>
+            <div class="score-bar-row">
+              <div class="bar-label">Velocity</div>
+              <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+              <div class="bar-val">12/15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-section">
+        <div class="section-header">
+          <div class="section-title">Recent Activity</div>
+          <div class="view-all" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])">See all →</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon green">🏆</div>
+          <div class="activity-info">
+            <div class="activity-name">Weekly Reward</div>
+            <div class="activity-date">Today, 08:30</div>
+          </div>
+          <div class="activity-amount amount-positive">+450 sats</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon orange">📱</div>
+          <div class="activity-info">
+            <div class="activity-name">M-Pesa Deposit</div>
+            <div class="activity-date">Yesterday</div>
+          </div>
+          <div class="activity-amount amount-positive">+1,200 sats</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon blue">💰</div>
+          <div class="activity-info">
+            <div class="activity-name">Auto-Stack</div>
+            <div class="activity-date">Mon, Apr 20</div>
+          </div>
+          <div class="activity-amount amount-positive">+500 sats</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item active"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ===== SAVE ===== -->
+  <div class="screen" id="screen-save">
+    <div class="scrollable">
+      <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+      <div class="save-screen">
+        <div class="screen-title">Stack Sats 🌱</div>
+        <div class="screen-sub">Every shilling saved grows your tree</div>
+
+        <div class="amount-input-card">
+          <div class="amount-label">Amount to Save</div>
+          <div class="amount-display"><span>KES</span> 500</div>
+          <div class="amount-sats-equiv">≈ 3,750 sats at today's rate</div>
+          <div class="quick-amounts">
+            <div class="quick-chip">KES 100</div>
+            <div class="quick-chip active">KES 500</div>
+            <div class="quick-chip">KES 1K</div>
+            <div class="quick-chip">KES 5K</div>
+          </div>
+        </div>
+
+        <div class="goal-selector">
+          <div class="goal-label">Save to Goal</div>
+          <div class="goal-chips">
+            <div class="goal-chip active">🏠 Emergency Fund</div>
+            <div class="goal-chip">📱 New Phone</div>
+            <div class="goal-chip">+ New Goal</div>
+          </div>
+        </div>
+
+        <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Pay With</div>
+        <div class="pay-methods">
+          <div class="pay-method selected">
+            <div class="pay-method-icon mpesa-icon">📱</div>
+            <div class="pay-method-info">
+              <div class="pay-method-name">M-Pesa</div>
+              <div class="pay-method-desc">Lipa na M-Pesa — instant & familiar</div>
+              <span class="pay-method-badge badge-recommended">✓ Recommended</span>
+            </div>
+          </div>
+          <div class="pay-method">
+            <div class="pay-method-icon lightning-icon">⚡</div>
+            <div class="pay-method-info">
+              <div class="pay-method-name">Lightning Network</div>
+              <div class="pay-method-desc">Direct Bitcoin — ultra low fees</div>
+              <span class="pay-method-badge badge-advanced">Advanced</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary">Pay KES 500 via M-Pesa →</button>
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">
+          A prompt will be sent to your M-Pesa phone
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item active"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ===== LOAN ===== -->
+  <div class="screen" id="screen-loan">
+    <div class="scrollable">
+      <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+      <div class="loan-screen">
+        <div class="screen-title">Commitments 💳</div>
+        <div class="screen-sub">Liquidity without selling your sats</div>
+
+        <div class="liquidity-hero">
+          <div class="liquidity-label">Available Liquidity</div>
+          <div class="liquidity-amount">KES <span>32,400</span></div>
+          <div class="liquidity-sub">Backed by your 93,375 sats savings</div>
+          <div class="score-badge-row">
+            <div class="score-badge">⭐ 842 Score — Platinum Access</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Active Commitments</div>
+          <div style="font-size:12px;color:var(--text3);">2 Total</div>
+        </div>
+
+        <div class="commitments-list">
+          <div class="commitment-card">
+            <div class="commitment-header">
+              <div class="commitment-name">🏡 Property Expansion</div>
+              <div class="commitment-status status-active">Active</div>
+            </div>
+            <div class="commitment-amount">0.85 BTC borrowed</div>
+            <div class="commitment-progress"><div class="commitment-fill" style="width:65%"></div></div>
+            <div class="commitment-meta">65% repaid · Due in 23 days</div>
+          </div>
+          <div class="commitment-card">
+            <div class="commitment-header">
+              <div class="commitment-name">⚡ Emergency Node</div>
+              <div class="commitment-status status-pending">Overdue</div>
+            </div>
+            <div class="commitment-amount">0.12 BTC borrowed</div>
+            <div class="commitment-progress"><div class="commitment-fill" style="width:20%;background:var(--red)"></div></div>
+            <div class="commitment-meta">20% repaid · 3 days overdue</div>
+          </div>
+        </div>
+
+        <div class="featured-article" style="margin-bottom:16px;">
+          <div class="featured-tag">💡 Market Insight</div>
+          <div style="display:flex;gap:20px;align-items:center;">
+            <div>
+              <div style="font-size:12px;color:var(--text3);">BTC/KES Rate</div>
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--green-light);">4.2% ↑</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:var(--text3);">Your Loan Rate</div>
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--orange);">2.8% flat</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="emergency-loan-btn">⚡ Request Emergency Loan</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item active"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ===== LEARN ===== -->
+  <div class="screen" id="screen-learn">
+    <div class="scrollable">
+      <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+      <div class="learn-screen">
+        <div class="screen-title">Learn Elite 📚</div>
+        <div class="screen-sub">Master Bitcoin. Grow your knowledge as your sats grow.</div>
+
+        <div class="featured-article">
+          <div class="featured-tag">🔥 Featured Read</div>
+          <div class="featured-title">The Philosophy of Long-term Growth</div>
+          <div class="featured-desc">Why every small saving decision today compounds into financial freedom tomorrow. A framework built for the African gig economy.</div>
+          <button class="read-btn">Start Reading →</button>
+        </div>
+
+        <div class="learn-grid">
+          <div class="learn-card">
+            <div class="learn-card-icon" style="background:rgba(255,215,0,0.1);">❓</div>
+            <div class="learn-card-info">
+              <div class="learn-card-title">What are Sats?</div>
+              <div class="learn-card-desc">The smallest unit of Bitcoin. 100 million sats = 1 BTC. Start here.</div>
+              <span class="learn-tag tag-beginner">Beginner</span>
+            </div>
+          </div>
+          <div class="learn-card">
+            <div class="learn-card-icon" style="background:rgba(255,82,82,0.1);">🛡️</div>
+            <div class="learn-card-info">
+              <div class="learn-card-title">Bitcoin vs. Volatility</div>
+              <div class="learn-card-desc">How to think about price swings when you're saving for the long term.</div>
+              <span class="learn-tag tag-intermediate">Intermediate</span>
+            </div>
+          </div>
+          <div class="learn-card">
+            <div class="learn-card-icon" style="background:rgba(45,155,87,0.1);">💡</div>
+            <div class="learn-card-info">
+              <div class="learn-card-title">How Loans Work</div>
+              <div class="learn-card-desc">Use your savings as collateral. Get liquidity without selling a single sat.</div>
+              <span class="learn-tag tag-intermediate">Intermediate</span>
+            </div>
+          </div>
+          <div class="learn-card">
+            <div class="learn-card-icon" style="background:rgba(74,158,255,0.1);">🔒</div>
+            <div class="learn-card-info">
+              <div class="learn-card-title">Security Tips</div>
+              <div class="learn-card-desc">Protect your wallet. Your keys, your coins — explained simply.</div>
+              <span class="learn-tag tag-beginner">Beginner</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ===== ACTIVITY ===== -->
+  <div class="screen" id="screen-activity">
+    <div class="scrollable">
+      <div class="status-bar"><span>9:41</span><span>●●●●</span></div>
+      <div class="activity-screen">
+        <div class="screen-title">Journal 📊</div>
+        <div class="screen-sub">Your complete savings history</div>
+
+        <div class="filter-row">
+          <div class="filter-chip active">All</div>
+          <div class="filter-chip">Deposits</div>
+          <div class="filter-chip">Withdrawals</div>
+          <div class="filter-chip">Rewards</div>
+          <div class="filter-chip">Loans</div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;">
+          <div class="highlight-card" style="flex:1;margin-bottom:0;">
+            <div>
+              <div class="highlight-label">This Month</div>
+              <div class="highlight-val green">+42,000</div>
+              <div style="font-size:11px;color:var(--text3);">sats saved</div>
+            </div>
+          </div>
+          <div class="highlight-card" style="flex:1;margin-bottom:0;">
+            <div>
+              <div class="highlight-label">Vault Transfer</div>
+              <div class="highlight-val orange">-120,000</div>
+              <div style="font-size:11px;color:var(--text3);">sats moved</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="month-group">
+          <div class="month-label">October 2025</div>
+          <div class="journal-card">
+            <div class="journal-item">
+              <div class="activity-icon green">🌱</div>
+              <div class="activity-info">
+                <div class="activity-name">Weekly Sprout</div>
+                <div class="activity-date">Oct 28 · Auto-stack reward</div>
+              </div>
+              <div class="activity-amount amount-positive">+42,000 sats</div>
+            </div>
+            <div class="journal-item">
+              <div class="activity-icon blue">🔄</div>
+              <div class="activity-info">
+                <div class="activity-name">Vault Transfer</div>
+                <div class="activity-date">Oct 22 · Cold storage</div>
+              </div>
+              <div class="activity-amount amount-negative">-120,000 sats</div>
+            </div>
+            <div class="journal-item">
+              <div class="activity-icon orange">⚡</div>
+              <div class="activity-info">
+                <div class="activity-name">Auto-DCA Draw</div>
+                <div class="activity-date">Oct 15 · Weekly DCA</div>
+              </div>
+              <div class="activity-amount amount-positive">+15,500 sats</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="month-group">
+          <div class="month-label">September 2025</div>
+          <div class="journal-card">
+            <div class="journal-item">
+              <div class="activity-icon green">📱</div>
+              <div class="activity-info">
+                <div class="activity-name">M-Pesa Deposit</div>
+                <div class="activity-date">Sep 30 · KES 2,000</div>
+              </div>
+              <div class="activity-amount amount-positive">+15,000 sats</div>
+            </div>
+            <div class="journal-item">
+              <div class="activity-icon blue">🏆</div>
+              <div class="activity-info">
+                <div class="activity-name">Goal Completed</div>
+                <div class="activity-date">Sep 15 · Phone fund</div>
+              </div>
+              <div class="activity-amount amount-positive">Milestone</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item active"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item" onclick="showScreen('profile', document.querySelectorAll('.nav-btn')[6])"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div class="screen" id="screen-profile">
+    <div class="scrollable">
+      <div class="status-bar" style="padding:14px 28px 0;"><span>9:41</span><span>●●●●</span></div>
+      <div class="profile-hero">
+        <div class="profile-avatar">A</div>
+        <div class="profile-info">
+          <h2>Aisha Kamau</h2>
+          <div class="profile-id">ISHLU-6FF3128E</div>
+          <div class="premium-badge">⭐ Premium Guardian</div>
+        </div>
+      </div>
+
+      <div class="alert-card">
+        <div class="alert-icon">🔐</div>
+        <div style="flex:1;">
+          <div class="alert-title">Backup Your Wallet</div>
+          <div class="alert-desc">Your seed phrase hasn't been backed up. Secure your sats against loss today.</div>
+          <button class="alert-btn">Start Backup Now →</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Access Control</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(74,158,255,0.1);">🔢</div>
+              <div>
+                <div class="settings-label">PIN Lock</div>
+                <div class="settings-desc">Require 6-digit code to open</div>
+              </div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(45,155,87,0.1);">🧬</div>
+              <div>
+                <div class="settings-label">Biometric Login</div>
+                <div class="settings-desc">Use fingerprint or face ID</div>
+              </div>
+            </div>
+            <div class="toggle"></div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(247,147,26,0.1);">👁️</div>
+              <div>
+                <div class="settings-label">Privacy Mode</div>
+                <div class="settings-desc">Hide balances on home screen</div>
+              </div>
+            </div>
+            <div class="toggle off"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Advanced Vault</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(255,82,82,0.1);">📋</div>
+              <div><div class="settings-label">Session Logs</div></div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(45,155,87,0.1);">🔒</div>
+              <div><div class="settings-label">Auto-Lock</div></div>
+            </div>
+            <div class="chevron">›</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Connectivity</div>
+        <div class="settings-card">
+          <div class="settings-row">
+            <div class="settings-row-left">
+              <div class="settings-icon" style="background:rgba(247,147,26,0.1);">📶</div>
+              <div>
+                <div class="settings-label">Lite Mode</div>
+                <div class="settings-desc">Low data usage for slow connections</div>
+              </div>
+            </div>
+            <div class="toggle off" id="liteModeToggle" onclick="toggleLite()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="bnav-item" onclick="showScreen('dashboard', document.querySelectorAll('.nav-btn')[1])"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+      <div class="bnav-item" onclick="showScreen('save', document.querySelectorAll('.nav-btn')[2])"><div class="bnav-icon">💾</div><div class="bnav-label">Save</div></div>
+      <div class="bnav-item" onclick="showScreen('loan', document.querySelectorAll('.nav-btn')[3])"><div class="bnav-icon">💳</div><div class="bnav-label">Loans</div></div>
+      <div class="bnav-item" onclick="showScreen('activity', document.querySelectorAll('.nav-btn')[5])"><div class="bnav-icon">📊</div><div class="bnav-label">Activity</div></div>
+      <div class="bnav-item active"><div class="bnav-icon">👤</div><div class="bnav-label">Profile</div></div>
+    </div>
+  </div>
+
+</div><!-- end phone -->
+
+<script>
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+let liteMode = false;
+function toggleLite() {
+  liteMode = !liteMode;
+  document.body.classList.toggle('lite-mode', liteMode);
+  document.getElementById('liteDot').className = 'lite-dot' + (liteMode ? ' slow' : '');
+  document.getElementById('liteLabel').textContent = liteMode ? 'Lite Mode' : 'Full Mode';
+  const toggle = document.getElementById('liteModeToggle');
+  if (toggle) toggle.className = 'toggle' + (liteMode ? '' : ' off');
+}
+
+// Animate bars on dashboard load
+setTimeout(() => {
+  document.querySelectorAll('.bar-fill').forEach(bar => {
+    const w = bar.style.width;
+    bar.style.width = '0';
+    setTimeout(() => { bar.style.width = w; }, 100);
+  });
+}, 300);
+</script>
+</body>
+</html>

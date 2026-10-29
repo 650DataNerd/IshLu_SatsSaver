@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     encryption_key: str
 
+    # Bitcoin multisig
+    bitcoin_network: str = "testnet"
+    ishlu_hot_privkey_hex: str = ""
+    ishlu_cold_pubkey_hex: str = ""
+
     class Config:
         env_file = ".env"
 

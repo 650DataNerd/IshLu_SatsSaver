@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from routers import auth, savings, trust, mpesa_webhook
 from routers import loans
 from routers import deposits
+from routers import multisig_deposits
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -26,6 +27,7 @@ app.include_router(trust.router, prefix="/api")
 app.include_router(mpesa_webhook.router, prefix="/api")
 app.include_router(loans.router, prefix="/api")
 app.include_router(deposits.router, prefix="/api")
+app.include_router(multisig_deposits.router, prefix="/api")
 
 @app.get("/health")
 def health():
