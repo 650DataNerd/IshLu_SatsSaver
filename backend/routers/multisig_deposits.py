@@ -140,52 +140,66 @@ async def verify_deposit(
     expected_sats: int,
     user=Depends(get_current_user)
 ):
-    """
-    Check if BTC deposit has arrived at the multisig address.
-    Polls Blockstream API — no cost, no key needed.
-    """
-    result = await check_deposit(address, expected_sats)
+    """Verify a multisig deposit. Credits exactly once, owner only."""
+    tx = supabase.table("transactions")\
+        .select("id, status, amount_sats")\
+        .eq("payment_hash", address)\
+        .eq("user_id", user["id"])\
+        .eq("type", "multisig_deposit")\
+        .execute()
 
-    if result.get("confirmed") and result.get("sufficient"):
-        # Update collateral vault balance
-        goals = supabase.table("savings_goals")\
-            .select("id")\
-            .eq("user_id", user["id"])\
-            .eq("status", "active")\
-            .limit(1).execute()
+    if not tx.data:
+        raise HTTPException(status_code=404, detail="Deposit address not found")
 
-        if goals.data:
-            supabase.rpc("increment_goal_sats", {
-                "goal_id": goals.data[0]["id"],
-                "amount": result["balance_sats"]
-            }).execute()
-        else:
-            supabase.table("savings_goals").insert({
-                "user_id": user["id"],
-                "name": "BTC Collateral Vault",
-                "target_sats": 10000000,
-                "current_sats": result["balance_sats"],
-                "status": "active",
-            }).execute()
+    if tx.data[0]["status"] == "settled":
+        return {"confirmed": True, "already_credited": True,
+                "message": "This deposit was already credited"}
 
-        # Mark transaction settled
-        supabase.table("transactions")\
-            .update({"status": "settled"})\
-            .eq("payment_hash", address)\
-            .eq("user_id", user["id"]).execute()
+    expected = tx.data[0]["amount_sats"]
+    result = await check_deposit(address, expected)
 
+    if not (result.get("confirmed") and result.get("sufficient")):
         return {
-            "confirmed": True,
-            "balance_sats": result["balance_sats"],
-            "message": f"{result['balance_sats']:,} sats confirmed and ready as collateral",
+            "confirmed": False,
+            "balance_sats": result.get("balance_sats", 0),
+            "message": "Waiting for Bitcoin confirmation (~10 minutes).",
             "explorer_url": result.get("explorer_url", "")
         }
 
+    claim = supabase.table("transactions")\
+        .update({"status": "settled"})\
+        .eq("id", tx.data[0]["id"])\
+        .eq("status", "pending")\
+        .execute()
+
+    if not claim.data:
+        return {"confirmed": True, "already_credited": True,
+                "message": "This deposit was already credited"}
+
+    credit = result["balance_sats"]
+    goals = supabase.table("savings_goals")\
+        .select("id")\
+        .eq("user_id", user["id"])\
+        .eq("status", "active")\
+        .limit(1).execute()
+
+    if goals.data:
+        supabase.rpc("increment_goal_sats", {
+            "goal_id": goals.data[0]["id"], "amount": credit
+        }).execute()
+    else:
+        supabase.table("savings_goals").insert({
+            "user_id": user["id"],
+            "name": "BTC Collateral Vault",
+            "target_sats": 10000000,
+            "current_sats": credit,
+            "status": "active",
+        }).execute()
+
     return {
-        "confirmed": False,
-        "balance_sats": result.get("balance_sats", 0),
-        "tx_count": result.get("tx_count", 0),
-        "message": "Waiting for Bitcoin confirmation. This takes ~10 minutes.",
+        "confirmed": True,
+        "balance_sats": credit,
+        "message": f"{credit:,} sats confirmed and ready as collateral",
         "explorer_url": result.get("explorer_url", "")
     }
 
